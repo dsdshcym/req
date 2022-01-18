@@ -489,6 +489,8 @@ defmodule Req.Steps do
 
   """
   @doc step: :response
+  def decompress(request_response)
+
   def decompress({request, %{body: ""} = response}) do
     {request, response}
   end
@@ -543,6 +545,8 @@ defmodule Req.Steps do
 
   """
   @doc step: :response
+  def decode_body(request_response)
+
   def decode_body({request, %{body: ""} = response}) do
     {request, response}
   end
@@ -638,7 +642,7 @@ defmodule Req.Steps do
 
   """
   @doc step: :response
-  def follow_redirects(request, options \\ [])
+  def follow_redirects(request_response, options \\ [])
 
   def follow_redirects({request, %{status: status} = response}, options)
       when status in 301..302 do
@@ -703,6 +707,8 @@ defmodule Req.Steps do
 
   """
   @doc step: :error
+  def retry(request_response_or_error, options)
+
   def retry({request, %{status: status} = response}, _options) when status < 500 do
     {request, response}
   end
