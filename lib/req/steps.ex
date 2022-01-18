@@ -38,7 +38,7 @@ defmodule Req.Steps do
 
     * [`&follow_redirects(&1, options[:follow_redirects])`](`follow_redirects/2`)
 
-    * `decompress/1`
+    * `decompress_body/1`
 
     * `decode_body/1`
 
@@ -61,7 +61,7 @@ defmodule Req.Steps do
 
     * `:cache` - if set to `true`, adds `put_if_modified_since/2` step
 
-    * `:raw` if set to `true`, skips `decompress/1` and `decode_body/1` steps
+    * `:raw` if set to `true`, skips `decompress_body/1` and `decode_body/1` steps
 
     * `:retry` - if set, adds the `retry/2` step to response and error steps
 
@@ -96,7 +96,7 @@ defmodule Req.Steps do
       maybe_steps(retry, [{Req.Steps, :retry, [retry]}]) ++
         [{Req.Steps, :follow_redirects, [options[:follow_redirects]]}] ++
         maybe_steps(not raw?, [
-          {Req.Steps, :decompress, []},
+          {Req.Steps, :decompress_body, []},
           {Req.Steps, :decode_body, []}
         ])
 
@@ -489,13 +489,13 @@ defmodule Req.Steps do
 
   """
   @doc step: :response
-  def decompress(request_response)
+  def decompress_body(request_response)
 
-  def decompress({request, %{body: ""} = response}) do
+  def decompress_body({request, %{body: ""} = response}) do
     {request, response}
   end
 
-  def decompress({request, response}) do
+  def decompress_body({request, response}) do
     compression_algorithms = get_content_encoding_header(response.headers)
     {request, update_in(response.body, &decompress_body(&1, compression_algorithms))}
   end

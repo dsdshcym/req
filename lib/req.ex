@@ -57,28 +57,69 @@ defmodule Req do
 
   ## Options
 
-    * `:headers` - request headers, defaults to `[]`
+  Request method and URL:
 
-    * `:body` - request body, defaults to `""`
+    * `:method` - sets the request method
 
-    * `:finch` - Finch pool to use, defaults to `Req.Finch` which is automatically started
-      by the application. See `Finch` module documentation for more information on starting pools.
+    * `:url` - sets the request URL
 
-    * `:finch_options` - Options passed down to Finch when making the request, defaults to `[]`.
-      See `Finch.request/3` for more information.
+    * `:base_url` - sets base URL ([`put_base_url`](`Req.Steps.put_base_url/2`) step)
 
-  The `options` are passed down to `Req.Steps.put_default_steps/2`, see its documentation for more
-  information how they are being used.
+    * `:params` - adds params to request query string ([`put_params`](`Req.Steps.put_params/2`) step)
 
-  The `options` are merged with default options set with `default_options/1`.
+  Request headers:
+
+    * `:headers` - sets request headers ([`encode_headers`](`Req.Steps.encode_headers/1`) step)
+
+    * `:auth` - sets request authentication ([`auth`](`Req.Steps.auth/2`) step)
+
+    * `:netrc` - if set, loads a `.netrc` file ([`load_netrc`](`Req.Steps.load_netrc/2`) step). Can be set to an atom `true` for the default
+      path or to a string for a custom path to the file.
+
+    * `:range` - sets the "Range" request header ([`put_range`](`Req.Steps.put_range/2`) step)
+
+  Request body:
+
+    * `:body` - sets request body ([`encode_body`](`Req.Steps.encode_body/1`) step)
+
+  Response body:
+
+    * `:raw` - if set, returns raw response body (by disabling [`decompress_body`](`Req.Steps.decompress_body/1`) and [`decode_body`](`Req.Steps.decode_body/1`) steps)
+
+  Response redirects ([`follow_redirects`](`Req.Steps.follow_redirects/2`) step):
+
+    * `:location_trusted` - by default, authorization credentials are only sent on redirects to the same host. If set to `true`, credentials will be sent to any host.
+
+    * `:max_redirects` - the maximum number of redirects, defaults to `50`. Set to `0` to disable automatic redirects.
+
+  Response/error retries ([`retry`](`Req.Steps.retry/2`) step):
+
+    * `:retry_delay` - the delay in milliseconds between retry attempts.
+
+    * `:max_retries` - the maximum number of retries, defaults to `2` (for a total of `3` requests to the server, including the initial one.)
+
+  Cache options ([`cache`](`Req.Steps.put_if_modified_since/2`) step):
+
+    * `:cache` - if `true`, enables HTTP caching. Defaults to `false`.
+
+    * `:cache_dir` - the directory to store the cache, defaults to `<user_cache_dir>/req` (see: `:filename.basedir/3`)
+
+  Finch options ([`run_finch`](`Req.Steps.run_finch/1`) step):
+
+    * `:finch` - the name of the Finch pool to use. Defaults to `Req.Finch` which is automatically started.
+
+    * `:pool_timeout` - the maximum allowed time in milliseconds to get a connection from the pool, defaults to `5000`.
+
+    * `:receive_timeout` - the maximum allowed time in milliseconds to receive a response from the socket, defaults to `15000`.
+
   """
-  @spec request(method(), url(), keyword()) ::
-          {:ok, Req.Response.t()} | {:error, Exception.t()}
-  def request(method, url, options \\ []) do
+  @spec request(url(), Keyword.t()) :: {:ok, Req.Response.t()} | {:error, Exception.t()}
+  def request(_url, options \\ []) do
+    method = :get
     options = Keyword.merge(default_options(), options)
 
     method
-    |> Req.Request.build(url, options)
+    |> Req.Request.build(options[:url], options)
     |> Req.Steps.put_default_steps(options)
     |> Req.Request.run()
   end

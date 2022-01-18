@@ -176,6 +176,9 @@ defmodule Req.StepsTest do
     assert_received {:got, 42}
   end
 
+  test "test/2" do
+  end
+
   ## Response steps
 
   test "decompress/2", c do
